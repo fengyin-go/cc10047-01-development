@@ -1,0 +1,683 @@
+{
+  "domain": "数据工程",
+  "subdirection": "数仓与数据湖",
+  "app_name": "实时流数据湖构建与治理平台",
+  "app_slug": "streaming-lakehouse-platform",
+  "app_desc": "面向实时流数据接入、Delta湖表构建、流批一体转换、分区合并和数据治理的流式数据湖平台",
+  "frontend": "vue",
+  "backend": "python",
+  "port_frontend": 5175,
+  "port_backend": 8011,
+  "modules": [
+    {
+      "key": "stream_source",
+      "name": "流数据源",
+      "entity": "流数据源",
+      "fields": [
+        "来源标识",
+        "接入协议",
+        "主题名称",
+        "分区数量",
+        "消费组",
+        "起始偏移",
+        "序列化格式",
+        "负责人"
+      ],
+      "statuses": [
+        "草稿",
+        "待校验",
+        "已接入",
+        "已停用"
+      ],
+      "actions": [
+        "提交校验",
+        "启用接入",
+        "停用接入"
+      ],
+      "action_targets": [
+        "待校验",
+        "已接入",
+        "已停用"
+      ],
+      "metrics": [
+        "来源总数",
+        "待校验来源",
+        "已接入来源"
+      ],
+      "desc": "维护实时流数据源的接入协议、消费组和序列化配置",
+      "page_shape": "crud-table",
+      "_page_shape_explicit": true
+    },
+    {
+      "key": "lake_table",
+      "name": "湖表定义",
+      "entity": "湖表定义",
+      "fields": [
+        "表标识",
+        "表名称",
+        "主键列",
+        "分区列",
+        "存储格式",
+        "压缩算法",
+        "表版本",
+        "当前快照"
+      ],
+      "statuses": [
+        "草稿",
+        "待校验",
+        "已创建",
+        "已冻结"
+      ],
+      "actions": [
+        "提交校验",
+        "创建表",
+        "冻结表"
+      ],
+      "action_targets": [
+        "待校验",
+        "已创建",
+        "已冻结"
+      ],
+      "metrics": [
+        "湖表总数",
+        "待校验湖表",
+        "已创建湖表"
+      ],
+      "desc": "定义Delta湖表的Schema、主键、分区策略和存储格式",
+      "page_shape": "crud-table",
+      "_page_shape_explicit": true
+    },
+    {
+      "key": "stream_ingest",
+      "name": "流式摄入",
+      "entity": "摄入管道",
+      "fields": [
+        "管道标识",
+        "来源流",
+        "目标湖表",
+        "写入模式",
+        "批次间隔",
+        "延迟上限",
+        "反压阈值",
+        "管道状态"
+      ],
+      "statuses": [
+        "待启动",
+        "运行中",
+        "已暂停",
+        "摄入异常"
+      ],
+      "actions": [
+        "启动管道",
+        "暂停管道"
+      ],
+      "action_targets": [
+        "待启动",
+        "运行中"
+      ],
+      "metrics": [
+        "管道总数",
+        "运行中管道",
+        "异常管道"
+      ],
+      "page_shape": "job-timeline",
+      "desc": "配置从流数据源到湖表的实时摄入管道和反压保护",
+      "_page_shape_explicit": true
+    },
+    {
+      "key": "delta_commit",
+      "name": "提交版本",
+      "entity": "版本提交",
+      "fields": [
+        "提交标识",
+        "目标湖表",
+        "提交类型",
+        "新增行数",
+        "更新行数",
+        "删除行数",
+        "提交水位",
+        "提交时间"
+      ],
+      "statuses": [
+        "提交中",
+        "已提交",
+        "提交冲突",
+        "已回退"
+      ],
+      "actions": [
+        "冲突处理",
+        "回退版本"
+      ],
+      "action_targets": [
+        "提交冲突",
+        "已提交"
+      ],
+      "metrics": [
+        "提交总数",
+        "已提交版本",
+        "冲突提交"
+      ],
+      "desc": "管理Delta湖表的版本提交、冲突检测和回退操作",
+      "page_shape": "crud-table",
+      "_page_shape_explicit": true
+    },
+    {
+      "key": "partition_merge",
+      "name": "分区合并",
+      "entity": "合并任务",
+      "fields": [
+        "任务标识",
+        "目标湖表",
+        "源分区",
+        "目标分区",
+        "合并策略",
+        "文件大小",
+        "执行状态",
+        "耗时秒数"
+      ],
+      "statuses": [
+        "排队中",
+        "合并中",
+        "已完成",
+        "合并失败"
+      ],
+      "actions": [
+        "启动合并",
+        "取消合并"
+      ],
+      "action_targets": [
+        "排队中",
+        "合并中"
+      ],
+      "metrics": [
+        "任务总数",
+        "已完成合并",
+        "合并失败"
+      ],
+      "desc": "对小文件分区执行合并压缩，优化查询性能和存储效率",
+      "page_shape": "crud-table",
+      "_page_shape_explicit": true
+    },
+    {
+      "key": "stream_schema",
+      "name": "流Schema演进",
+      "entity": "Schema变更",
+      "fields": [
+        "变更标识",
+        "目标湖表",
+        "变更类型",
+        "变更字段",
+        "兼容级别",
+        "回填策略",
+        "变更状态",
+        "生效版本"
+      ],
+      "statuses": [
+        "待审批",
+        "回填中",
+        "已生效",
+        "已回退"
+      ],
+      "actions": [
+        "执行变更",
+        "回退变更"
+      ],
+      "action_targets": [
+        "待审批",
+        "回填中"
+      ],
+      "metrics": [
+        "变更总数",
+        "已生效变更",
+        "待审批变更"
+      ],
+      "desc": "管理流式写入场景下的Schema演进、兼容性检查和历史数据回填",
+      "page_shape": "crud-table",
+      "_page_shape_explicit": true
+    },
+    {
+      "key": "snapshot_mgr",
+      "name": "快照管理",
+      "entity": "表快照",
+      "fields": [
+        "快照标识",
+        "目标湖表",
+        "快照时间",
+        "数据行数",
+        "存储大小",
+        "过期时间",
+        "快照标签",
+        "保留状态"
+      ],
+      "statuses": [
+        "创建中",
+        "可用",
+        "已过期",
+        "已清理"
+      ],
+      "actions": [
+        "创建快照",
+        "延长保留"
+      ],
+      "action_targets": [
+        "可用",
+        "已过期"
+      ],
+      "metrics": [
+        "快照总数",
+        "可用快照",
+        "已过期快照"
+      ],
+      "desc": "管理湖表的时间点快照、保留策略和快照清理",
+      "page_shape": "crud-table",
+      "_page_shape_explicit": true
+    },
+    {
+      "key": "stream_quality",
+      "name": "流质量校验",
+      "entity": "质量检查",
+      "fields": [
+        "检查标识",
+        "目标管道",
+        "校验字段",
+        "校验算子",
+        "告警阈值",
+        "采样窗口",
+        "阻断级别",
+        "上次结果"
+      ],
+      "statuses": [
+        "待启用",
+        "运行中",
+        "已通过",
+        "未通过"
+      ],
+      "actions": [
+        "启动检查",
+        "忽略告警"
+      ],
+      "action_targets": [
+        "待启用",
+        "未通过"
+      ],
+      "metrics": [
+        "检查总数",
+        "已通过检查",
+        "未通过检查"
+      ],
+      "desc": "对流式写入的数据执行实时质量校验和异常告警",
+      "page_shape": "crud-table",
+      "_page_shape_explicit": true
+    },
+    {
+      "key": "vacuum_job",
+      "name": "历史清理",
+      "entity": "清理作业",
+      "fields": [
+        "作业标识",
+        "目标湖表",
+        "保留版本",
+        "清理范围",
+        "预览大小",
+        "执行状态",
+        "清理时间",
+        "释放空间"
+      ],
+      "statuses": [
+        "待执行",
+        "清理中",
+        "已完成",
+        "清理异常"
+      ],
+      "actions": [
+        "执行清理",
+        "取消清理"
+      ],
+      "action_targets": [
+        "待执行",
+        "清理中"
+      ],
+      "metrics": [
+        "作业总数",
+        "已完成清理",
+        "异常清理"
+      ],
+      "desc": "定期清理过期的Delta版本文件和快照，释放存储空间",
+      "page_shape": "crud-table",
+      "_page_shape_explicit": true
+    },
+    {
+      "key": "batch_merge",
+      "name": "批流合并",
+      "entity": "合并管道",
+      "fields": [
+        "管道标识",
+        "流来源",
+        "批来源",
+        "目标湖表",
+        "去重字段",
+        "冲突解决",
+        "合并窗口",
+        "上次合并"
+      ],
+      "statuses": [
+        "待配置",
+        "待校验",
+        "运行中",
+        "已停用"
+      ],
+      "actions": [
+        "提交校验",
+        "启动合并",
+        "停用合并"
+      ],
+      "action_targets": [
+        "待校验",
+        "运行中",
+        "已停用"
+      ],
+      "metrics": [
+        "管道总数",
+        "运行中管道",
+        "待校验管道"
+      ],
+      "desc": "将实时流和批量回填数据合并写入同一湖表，处理去重和冲突",
+      "page_shape": "crud-table",
+      "_page_shape_explicit": true
+    },
+    {
+      "key": "lake_lineage",
+      "name": "湖表血缘",
+      "entity": "血缘链路",
+      "fields": [
+        "链路标识",
+        "上游表",
+        "下游表",
+        "转换算子",
+        "字段映射",
+        "采集时间",
+        "链路版本",
+        "数据量级"
+      ],
+      "statuses": [
+        "已建立",
+        "待验证",
+        "已断裂",
+        "已废弃"
+      ],
+      "actions": [
+        "刷新血缘",
+        "标记断裂"
+      ],
+      "action_targets": [
+        "已建立",
+        "已断裂"
+      ],
+      "metrics": [
+        "链路总数",
+        "已建立链路",
+        "断裂链路"
+      ],
+      "page_shape": "dag-graph",
+      "desc": "自动解析流处理和批处理之间的湖表级和字段级数据血缘",
+      "_page_shape_explicit": true
+    },
+    {
+      "key": "retention_policy",
+      "name": "保留策略",
+      "entity": "保留规则",
+      "fields": [
+        "规则标识",
+        "目标湖表",
+        "保留天数",
+        "清理方式",
+        "豁免标记",
+        "上次执行",
+        "执行结果",
+        "下次执行"
+      ],
+      "statuses": [
+        "待生效",
+        "已生效",
+        "已暂停",
+        "已过期"
+      ],
+      "actions": [
+        "启用规则",
+        "暂停规则"
+      ],
+      "action_targets": [
+        "待生效",
+        "已生效"
+      ],
+      "metrics": [
+        "规则总数",
+        "已生效规则",
+        "已暂停规则"
+      ],
+      "desc": "按表设置数据生命周期和合规保留策略",
+      "page_shape": "crud-table",
+      "_page_shape_explicit": true
+    },
+    {
+      "key": "compaction_task",
+      "name": "压缩任务",
+      "entity": "压缩任务",
+      "fields": [
+        "任务标识",
+        "目标湖表",
+        "压缩算法",
+        "目标大小",
+        "并行度",
+        "执行状态",
+        "压缩比率",
+        "完成时间"
+      ],
+      "statuses": [
+        "排队中",
+        "压缩中",
+        "已完成",
+        "压缩失败"
+      ],
+      "actions": [
+        "启动压缩",
+        "取消压缩"
+      ],
+      "action_targets": [
+        "排队中",
+        "压缩中"
+      ],
+      "metrics": [
+        "任务总数",
+        "已完成压缩",
+        "压缩失败"
+      ],
+      "desc": "对湖表数据文件执行Z-order排序和压缩重组优化",
+      "page_shape": "crud-table",
+      "_page_shape_explicit": true
+    },
+    {
+      "key": "backfill_pipeline",
+      "name": "数据回填",
+      "entity": "回填任务",
+      "fields": [
+        "任务标识",
+        "目标湖表",
+        "回填范围",
+        "并行分区",
+        "覆盖模式",
+        "回填状态",
+        "完成行数",
+        "失败分区"
+      ],
+      "statuses": [
+        "排队中",
+        "回填中",
+        "已完成",
+        "回填失败"
+      ],
+      "actions": [
+        "启动回填",
+        "取消回填"
+      ],
+      "action_targets": [
+        "排队中",
+        "回填中"
+      ],
+      "metrics": [
+        "任务总数",
+        "已完成回填",
+        "回填失败"
+      ],
+      "desc": "对历史分区或时间范围执行数据回填和覆盖写入",
+      "page_shape": "crud-table",
+      "_page_shape_explicit": true
+    },
+    {
+      "key": "stream_metric",
+      "name": "流处理指标",
+      "entity": "处理指标",
+      "fields": [
+        "指标标识",
+        "关联管道",
+        "指标类型",
+        "指标值",
+        "统计窗口",
+        "基线上界",
+        "基线下界",
+        "采集时间"
+      ],
+      "statuses": [
+        "采集中",
+        "已入库",
+        "已聚合"
+      ],
+      "actions": [
+        "刷新指标",
+        "调整基线"
+      ],
+      "action_targets": [
+        "已入库",
+        "已入库"
+      ],
+      "metrics": [
+        "指标总数",
+        "已入库指标",
+        "活跃采集"
+      ],
+      "desc": "采集流处理管道的吞吐、延迟和反压等运行指标",
+      "page_shape": "crud-table",
+      "_page_shape_explicit": true
+    },
+    {
+      "key": "iceberg_migrate",
+      "name": "格式迁移",
+      "entity": "迁移计划",
+      "fields": [
+        "计划标识",
+        "源格式",
+        "目标格式",
+        "迁移表名",
+        "迁移范围",
+        "校验方式",
+        "迁移状态",
+        "完成表数"
+      ],
+      "statuses": [
+        "待执行",
+        "迁移中",
+        "已完成",
+        "迁移失败"
+      ],
+      "actions": [
+        "启动迁移",
+        "取消迁移"
+      ],
+      "action_targets": [
+        "待执行",
+        "迁移中"
+      ],
+      "metrics": [
+        "计划总数",
+        "已完成计划",
+        "迁移失败"
+      ],
+      "desc": "将存量Hive/Parquet表迁移到Iceberg格式并进行完整性校验",
+      "page_shape": "crud-table",
+      "_page_shape_explicit": true
+    },
+    {
+      "key": "table_catalog",
+      "name": "表目录同步",
+      "entity": "同步记录",
+      "fields": [
+        "记录标识",
+        "来源Catalog",
+        "目标Catalog",
+        "同步表名",
+        "同步范围",
+        "同步状态",
+        "差异行数",
+        "同步时间"
+      ],
+      "statuses": [
+        "待同步",
+        "同步中",
+        "已同步",
+        "同步失败"
+      ],
+      "actions": [
+        "启动同步",
+        "取消同步"
+      ],
+      "action_targets": [
+        "待同步",
+        "同步中"
+      ],
+      "metrics": [
+        "记录总数",
+        "已同步记录",
+        "同步失败"
+      ],
+      "desc": "在不同Catalog或Metastore之间同步表结构和元数据",
+      "page_shape": "crud-table",
+      "_page_shape_explicit": true
+    },
+    {
+      "key": "lake_audit",
+      "name": "湖仓审计",
+      "entity": "审计报告",
+      "fields": [
+        "报告标识",
+        "审计范围",
+        "审计时间",
+        "检查表数",
+        "异常表数",
+        "孤儿文件",
+        "审计结论",
+        "修复建议"
+      ],
+      "statuses": [
+        "审计中",
+        "已通过",
+        "未通过"
+      ],
+      "actions": [
+        "发起审计",
+        "确认报告"
+      ],
+      "action_targets": [
+        "审计中",
+        "已通过"
+      ],
+      "metrics": [
+        "报告总数",
+        "已通过审计",
+        "未通过审计"
+      ],
+      "desc": "定期审计数据湖的元数据完整性、孤儿文件和存储用量",
+      "page_shape": "crud-table",
+      "_page_shape_explicit": true
+    }
+  ]
+}
