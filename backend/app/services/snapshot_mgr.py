@@ -1,8 +1,9 @@
-"""__NAME__领域服务：字段、状态和动作来自业务配置，数据处理骨架由基类复用。"""
+"""快照管理领域服务：快照登记之外，承载两版湖表快照的物理文件差异视图。"""
 from __future__ import annotations
 
 from typing import Any
 
+from app.lakehouse import registry
 from app.services.base import BaseModuleService
 from app.store import store
 
@@ -40,3 +41,46 @@ class SnapshotMgrService(BaseModuleService):
             "expiration": entry.get("过期时间", "30d"),
             "label": entry.get("快照标签", "manual"),
         }
+
+    # ------------------------------------------------------------------
+    # 数据文件差异视图：按物理文件比较两版快照，差异分移除/改写/补进
+    # ------------------------------------------------------------------
+
+    def domain_compare_snapshots(self, base_snapshot_id: str, target_snapshot_id: str) -> dict[str, Any]:
+        """生成两版快照的物理文件差异视图；视图固化，后续引用变化不回改原比较。"""
+        try:
+            view = registry.create_diff(base_snapshot_id, target_snapshot_id)
+        except KeyError as exc:
+            return {"ok": False, "message": str(exc)}
+        except ValueError as exc:
+            return {"ok": False, "message": str(exc)}
+        payload = view.to_dict()
+        payload["ok"] = True
+        payload["message"] = (
+            f"差异视图已固化：移除 {payload['removed_count']} 件、"
+            f"改写 {payload['rewritten_count']} 件、补进 {payload['added_count']} 件"
+        )
+        return payload
+
+    def domain_attach_snapshot_file(
+        self, snapshot_id: str, table: str, path: str, checksum: str, size_bytes: int = 1024,
+    ) -> dict[str, Any]:
+        """把一个已登记的物理文件挂到另一个快照（新增引用，对象身份不变）。"""
+        try:
+            result = registry.attach_reference(snapshot_id, table, path, checksum, size_bytes)
+        except KeyError as exc:
+            return {"ok": False, "message": str(exc)}
+        except ValueError as exc:
+            return {"ok": False, "message": str(exc)}
+        result["ok"] = True
+        result["message"] = f"快照 {snapshot_id} 已登记对 {path} 的引用"
+        return result
+
+    def domain_snapshot_readable(self, snapshot_id: str) -> dict[str, Any]:
+        """核对快照引用的每个物理文件都未被释放，保证快照仍可读。"""
+        try:
+            result = registry.is_snapshot_readable(snapshot_id)
+        except KeyError as exc:
+            return {"ok": False, "message": str(exc)}
+        result["ok"] = True
+        return result
